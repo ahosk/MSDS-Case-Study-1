@@ -1,0 +1,18 @@
+library(tidyr)
+library(tidyverse)
+library(magrittr)
+library(dplyr)
+
+#reading in data
+beers = read_csv(file.choose())
+breweries = read_csv(file.choose())
+
+head(beers)
+head(breweries)
+
+#renaming columns to match
+beers = beers %>% rename( Brew_ID  = Brewery_id,
+                  Beer_name = Name)
+#merging data sets
+bb = left_join(breweries,beers,by = NULL )
+head(bb)
