@@ -9,10 +9,10 @@ breweries = read_csv(file.choose())
 
 head(beers)
 head(breweries)
-
 #renaming columns to match
-beers = beers %>% rename( Brew_ID  = Brewery_id,
-                  Beer_name = Name)
+names(beers)[1] = 'Beer_Name'
+names(beers)[5] = 'Brew_ID'
+
 #merging data sets
 bb = left_join(breweries,beers,by = NULL )
 head(bb)
