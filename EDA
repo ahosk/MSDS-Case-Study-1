@@ -1,0 +1,47 @@
+
+#q1
+count(breweries,'State')
+#q2
+head(bb,6)
+tail(bb,6)
+
+#q3
+library(naniar)
+colSums(is.na(bb))
+gg_miss_var(bb,show_pct = TRUE)
+
+#q4
+#Compute the median alcohol content and international bitterness unit for each state. Plot a bar chart to compare.
+
+bb %>% filter(!is.na(ABV)) %>%
+   ggplot(aes(State, ABV)) +
+   geom_bar(stat = 'summary', fun.y = 'mean') +
+   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+bb %>% filter(!is.na(IBU)) %>%
+   ggplot(aes(State, IBU)) +
+   geom_bar(stat = 'summary', fun.y = 'mean') +
+   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+#q5
+#5.   Which state has the maximum alcoholic (ABV) beer? Which state has the most bitter (IBU) beer?
+
+bb[which.max(bb$ABV),]
+
+bb[which.max(bb$IBU),]
+
+#q6
+summary(bb$ABV)
+
+
+#q7
+#7.   Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.  Make your best judgment of a relationship and EXPLAIN your answer.
+library(ggthemes)
+library(ggpubr)
+bb%>% filter(!is.na(ABV)&!is.na(IBU)) %>%
+   ggplot(aes(ABV,IBU)) +
+   geom_point()+
+   geom_smooth(method = 'lm')+
+   stat_cor(method="pearson")+
+   theme_minimal()
