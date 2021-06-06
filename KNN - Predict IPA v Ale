@@ -1,0 +1,16 @@
+library(class)
+library(caret)
+library(e1071)
+
+bb_knn = bb %>%
+   filter(!is.na(IBU)&!is.na(ABV)) %>%
+   filter(grepl('\\bAle\\b|\\bIPA\\b',Style,ignore.case = TRUE))
+
+bb_knn$IPA_Ale = ifelse(grepl('\\bIPA\\b',bb_knn$Style,ignore.case = TRUE),'IPA','Ale')
+   
+bb_knn$Z_IBU = scale(bb_knn$IBU)
+bb_knn$Z_ABV = scale(bb_knn$ABV)
+   
+classification = knn.cv(bb_knn[,c(12,13)],bb_knn$IPA_Ale,prob = TRUE, k = 10)
+table(classification,bb_knn$IPA_Ale)
+confusionMatrix(table(classification,bb_knn$IPA_Ale))
