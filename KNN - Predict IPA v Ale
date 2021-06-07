@@ -2,15 +2,50 @@ library(class)
 library(caret)
 library(e1071)
 
+
+#fillter down to Ale's and IPAs
 bb_knn = bb %>%
-   filter(!is.na(IBU)&!is.na(ABV)) %>%
    filter(grepl('\\bAle\\b|\\bIPA\\b',Style,ignore.case = TRUE))
 
-bb_knn$IPA_Ale = ifelse(grepl('\\bIPA\\b',bb_knn$Style,ignore.case = TRUE),'IPA','Ale')
+#create IPA/Ale column for analysis
+bb_knn$IPA_Ale = as.factor(ifelse(grepl('\\bIPA\\b',bb_knn$Style,ignore.case = TRUE),'IPA','Ale'))
    
+#find mean to impute for NA values
+ABV_mean = c(tapply(bb_knn$ABV, bb_knn$IPA_Ale, mean))
+
+IBU_mean = c(tapply(bb_knn$IBU, bb_knn$IPA_Ale, mean))
+
+ABV_mean
+IBU_mean
+
+#replace NA values with mean IBU
+bb_knn = bb_knn %>%
+   mutate(IBU = ifelse(IPA_Ale =='IPA', replace_na(IBU,IBU_mean[[2]]),replace_na(IBU,IBU_mean[[1]])))%>%
+   mutate(ABV = ifelse(IPA_Ale =='IPA', replace_na(ABV,IBU_mean[[2]]),replace_na(ABV,IBU_mean[[1]])))
+
+
+#check for updated rows
+gg_miss_var(bb_knn,show_pct = TRUE)
+
+#standardize IBU and ABV
 bb_knn$Z_IBU = scale(bb_knn$IBU)
 bb_knn$Z_ABV = scale(bb_knn$ABV)
    
+#run KNN model
 classification = knn.cv(bb_knn[,c(12,13)],bb_knn$IPA_Ale,prob = TRUE, k = 10)
 table(classification,bb_knn$IPA_Ale)
 confusionMatrix(table(classification,bb_knn$IPA_Ale))
+
+
+#####NAIVE BAYES
+set.seed(4)
+trainIndices = sample(seq(1:length(bb_knn$IPA_Ale)),round(.7*length(bb_knn$IPA_Ale)))
+train_nb = bb_knn[trainIndices,]
+test_nb = bb_knn[-trainIndices,]
+
+head(train_nb)
+head(test_nb)
+
+model = naiveBayes(train_nb[,c(12,13)],train_nb$IPA_Ale)
+table(predict(model,test_nb[,c(12,13)]),test_nb$IPA_Ale)
+confusionMatrix(table(predict(model,test_nb[,c(12,13)]),test_nb$IPA_Ale))
